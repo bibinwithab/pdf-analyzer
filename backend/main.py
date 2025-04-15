@@ -14,7 +14,12 @@ from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 
+from pydantic import BaseModel
+
 GOOGLE_GEMINI_KEY = 'AIzaSyARTnyuSl51LQNEuHKC5oGQU8l_A2WORsI'
+
+class Question(BaseModel):
+    question: str
 
 def get_pdf_text(pdf_path):
     if os.path.isfile(pdf_path):
@@ -47,7 +52,7 @@ def get_conversational_chain():
     Do not make up an answer.
 
     Context:
-    {input_documents}
+    {context}
 
     Question:
     {question}
@@ -63,7 +68,7 @@ def get_conversational_chain():
 
     prompt = PromptTemplate(
         template=prompt_template,
-        input_variables=["input_documents", "question"]
+        input_variables=["context", "question"]
     )
 
     return create_stuff_documents_chain(llm=model, prompt=prompt)
@@ -84,19 +89,19 @@ def ask_question(user_question):
     chain = get_conversational_chain()
 
     response = chain.invoke({
-        "input_documents": docs,
+        "context": docs,
         "question": user_question
     })
 
+    print("Raw response from chain:", response)
     return response
-
 
 app = FastAPI()
 
-# CORS (optional if frontend exists)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],  # or ["*"] for all origins (less secure)
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -119,9 +124,17 @@ async def upload_pdf(file: UploadFile = File(...)):
     return {"message": "PDF processed and vector store created."}
 
 @app.post("/ask-question/")
-async def ask(user_question: str = Form(...)):
-    try:
-        answer = ask_question(user_question)
-        return {"answer": answer}
-    except Exception as e:
-        return {"error": str(e)}
+@app.post("/ask-question/")
+def ask_question_route(q: Question):
+    response = ask_question(q.question)
+
+    print("Full chain response:", response)
+
+    # assuming LangChain returns dict
+    if isinstance(response, dict) and "answer" in response:
+        return {"answer": response["answer"]}
+    elif isinstance(response, str):
+        return {"answer": response}
+    else:
+        return {"answer": "Could not generate answer."}
+
