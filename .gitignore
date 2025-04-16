@@ -1,3 +1,4 @@
 .qodo
 venv/
 faiss_index/
+pdf/
