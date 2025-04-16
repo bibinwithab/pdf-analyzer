@@ -3,6 +3,8 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import re
+import json
 
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -124,7 +126,6 @@ async def upload_pdf(file: UploadFile = File(...)):
     return {"message": "PDF processed and vector store created."}
 
 @app.post("/ask-question/")
-@app.post("/ask-question/")
 def ask_question_route(q: Question):
     response = ask_question(q.question)
 
@@ -138,3 +139,32 @@ def ask_question_route(q: Question):
     else:
         return {"answer": "Could not generate answer."}
 
+@app.post("/generate-flashcards/")
+def generate_flashcards(topic: Question):
+    model = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",
+        temperature=0.5,
+        google_api_key=GOOGLE_GEMINI_KEY
+    )
+
+    prompt = f"""
+    Create 5 educational flashcards on the topic: "{topic.question}".
+    Return only a JSON array of flashcards with 'question' and 'answer' keys.
+    Do not use markdown or triple backticks.
+    """
+
+    response = model.invoke(prompt)
+    raw = response.content if hasattr(response, "content") else str(response)
+
+
+    try:
+        flashcards = json.loads(raw)
+        # print(flashcards)
+    except Exception as e:
+        return {
+            "error": "Failed to parse flashcards.",
+            "details": str(e),
+            "raw_response": raw
+        }
+
+    return {"flashcards": flashcards}
