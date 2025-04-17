@@ -139,7 +139,7 @@ export default function PDFChat() {
           accept=".pdf"
           className="hidden"
         />
-        <div className="flex justify-center">
+        <div className="flex pb-4 justify-center">
           <button
             onClick={triggerFileInput}
             disabled={loading}
