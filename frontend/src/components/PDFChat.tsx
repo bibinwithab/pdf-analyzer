@@ -19,7 +19,7 @@ export default function PDFChat() {
     const selectedFile = event.target.files?.[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
       setFile(selectedFile);
-      setMessages([{ type: 'bot', content: 'PDF uploaded successfully! Processing...' }]);
+      setMessages([{ type: 'bot', content: 'Processing...' }]);
       handleUpload(selectedFile);
     } else {
       setMessages([{ type: 'bot', content: 'Please upload a PDF file.' }]);

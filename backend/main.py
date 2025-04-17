@@ -128,7 +128,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     chunks = get_text_chunks(text)
     get_vector_store(chunks)
 
-    return {"message": "PDF processed and vector store created."}
+    return {"message": "PDF processed successfully."}
 
 @app.post("/ask-question/")
 def ask_question_route(q: Question):
