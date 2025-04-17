@@ -25,7 +25,6 @@ export default function Flashcards() {
         question: topic,
       });
 
-      // Ensure that the response data structure matches what we expect
       if (response.data && Array.isArray(response.data.flashcards)) {
         setFlashcards(response.data.flashcards);
       } else {

@@ -136,7 +136,6 @@ def ask_question_route(q: Question):
 
     print("Full chain response:", response)
 
-    # assuming LangChain returns dict
     if isinstance(response, dict) and "answer" in response:
         return {"answer": response["answer"]}
     elif isinstance(response, str):
@@ -146,30 +145,66 @@ def ask_question_route(q: Question):
 
 @app.post("/generate-flashcards/")
 def generate_flashcards(topic: Question):
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001",
+        google_api_key=GOOGLE_GEMINI_KEY
+    )
+
+    vector_store = FAISS.load_local(
+        "faiss_index",
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
+
+    docs = vector_store.similarity_search(topic.question)
+
+    context_text = "\n\n".join([doc.page_content for doc in docs])
+
+    prompt = f"""
+    Based on the following context, generate 7 educational flashcards on the topic: "{topic.question}".
+
+    Context:
+    {context_text}
+
+    Format:
+    Return only a JSON array of flashcards, each with 'question' and 'answer' keys.
+    Return only a raw JSON array. Do NOT wrap it with triple backticks or any markdown.
+    Do not include any markdown, triple quotes, or extra commentary.
+
+    Example:
+    [
+        {{
+            "question": "What is DNS?",
+            "answer": "DNS stands for Domain Name System..."
+        }},
+        ...
+    ]
+    """
+
     model = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         temperature=0.5,
         google_api_key=GOOGLE_GEMINI_KEY
     )
 
-    prompt = f"""
-    Create 7 educational flashcards on the topic: "{topic.question}".
-    Return only a JSON array of flashcards with 'question' and 'answer' keys.
-    Do not use markdown or triple backticks.
-    """
-
     response = model.invoke(prompt)
     raw = response.content if hasattr(response, "content") else str(response)
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
 
+    print("cleaned flashcard response:", cleaned)
 
     try:
-        flashcards = json.loads(raw)
-        # print(flashcards)
+        if isinstance(raw, str):
+            flashcards = json.loads(cleaned)
+        elif isinstance(raw, list):
+            flashcards = raw
+        else:
+            raise ValueError("Unexpected response format")
     except Exception as e:
         return {
             "error": "Failed to parse flashcards.",
             "details": str(e),
-            "raw_response": raw
+            "raw_response": str(raw)
         }
 
     return {"flashcards": flashcards}

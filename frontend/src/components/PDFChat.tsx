@@ -32,7 +32,6 @@ export default function PDFChat() {
     formData.append('file', selectedFile);
 
     try {
-      // Replace with your API endpoint
       const response = await axios.post(URL+'upload-pdf/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -51,7 +50,6 @@ export default function PDFChat() {
     setLoading(true);
     setMessages(prev => [...prev, { type: 'user', content: question }]);
     try {
-      // Replace with your API endpoint
       const response = await axios.post(URL+'ask-question/', {
         question,
       });
