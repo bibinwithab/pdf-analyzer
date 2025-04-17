@@ -2,3 +2,10 @@
 venv/
 faiss_index/
 pdf/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+uploads/

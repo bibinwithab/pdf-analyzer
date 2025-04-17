@@ -1,10 +1,9 @@
-# main.py
-
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import re
 import json
+from dotenv import load_dotenv
 
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -18,7 +17,9 @@ import os
 
 from pydantic import BaseModel
 
-GOOGLE_GEMINI_KEY = 'AIzaSyARTnyuSl51LQNEuHKC5oGQU8l_A2WORsI'
+load_dotenv()
+
+GOOGLE_GEMINI_KEY = os.getenv("GOOGLE_GEMINI_KEY")
 
 class Question(BaseModel):
     question: str
@@ -100,12 +101,13 @@ def ask_question(user_question):
 
 app = FastAPI()
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # or ["*"] for all origins (less secure)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins = ["http://localhost:5173"],
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = {"*"},
 )
 
 @app.get("/")
@@ -114,7 +116,10 @@ def read_root():
 
 @app.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...)):
-    pdf_path = f"./{file.filename}"
+    upload_dir = "./uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    pdf_path = os.path.join(upload_dir, file.filename)
     with open(pdf_path, "wb") as f:
         content = await file.read()
         f.write(content)
@@ -148,7 +153,7 @@ def generate_flashcards(topic: Question):
     )
 
     prompt = f"""
-    Create 5 educational flashcards on the topic: "{topic.question}".
+    Create 7 educational flashcards on the topic: "{topic.question}".
     Return only a JSON array of flashcards with 'question' and 'answer' keys.
     Do not use markdown or triple backticks.
     """
