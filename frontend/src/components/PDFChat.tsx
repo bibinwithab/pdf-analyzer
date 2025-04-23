@@ -1,17 +1,12 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { Upload, Send, Loader2, X } from 'lucide-react';
-
-interface Message {
-  type: 'user' | 'bot';
-  content: string;
-}
+import { useData } from './DataContext'; 
 
 export default function PDFChat() {
-  const [file, setFile] = useState<File | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { file, setFile, messages, setMessages, loading, setLoading } = useData();
 
   const URL = 'http://127.0.0.1:8000/'
 

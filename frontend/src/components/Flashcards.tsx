@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Search, RotateCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useData } from './DataContext';
 
-interface Flashcard {
-  question: string;
-  answer: string;
-}
 
 export default function Flashcards() {
+  const { flashcards, setFlashcards } = useData(); 
   const [topic, setTopic] = useState('');
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  // const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(false);

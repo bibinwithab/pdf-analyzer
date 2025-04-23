@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Search, RotateCw } from 'lucide-react';
+import { useData } from './DataContext';
 
-interface MCQ {
-  question: string;
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-  correct_answer: string;
-}
 
 export default function MCQs() {
+    const { mcqs, setMcqs } = useData(); 
   const [topic, setTopic] = useState('');
-  const [mcqs, setMcqs] = useState<MCQ[]>([]);
+//   const [mcqs, setMcqs] = useState<MCQ[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(false);
