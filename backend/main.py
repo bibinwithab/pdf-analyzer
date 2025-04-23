@@ -104,7 +104,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ["http://localhost:5173"],
+    allow_origins = ["http://localhost:5173", "*"],
     allow_credentials = True,
     allow_methods = ["*"],
     allow_headers = {"*"},
@@ -208,3 +208,73 @@ def generate_flashcards(topic: Question):
         }
 
     return {"flashcards": flashcards}
+
+@app.post("/generate-mcqs/")
+def generate_mcqs(topic: Question):
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001",
+        google_api_key=GOOGLE_GEMINI_KEY
+    )
+
+    vector_store = FAISS.load_local(
+        "faiss_index",
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
+
+    docs = vector_store.similarity_search(topic.question)
+
+    context_text = "\n\n".join([doc.page_content for doc in docs])
+
+    prompt = f"""
+    Based on the following context, generate 7 multiple choice questions (MCQs) on the topic: "{topic.question}".
+
+    Each question should have:
+    - One question stem
+    - Four options labeled A, B, C, and D
+    - The correct answer indicated as a letter (A/B/C/D)
+
+    Return only a raw JSON array in the following format:
+
+    [
+        {{
+            "question": "What does DNS stand for?",
+            "options": {{
+                "A": "Dynamic Network Service",
+                "B": "Domain Name System",
+                "C": "Distributed Naming Service",
+                "D": "Data Network Structure"
+            }},
+            "correct_answer": "B"
+        }},
+        ...
+    ]
+
+    Do not add any markdown, quotes, or explanation—just return raw JSON.
+    """
+
+    model = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",
+        temperature=0.5,
+        google_api_key=GOOGLE_GEMINI_KEY
+    )
+
+    response = model.invoke(prompt)
+    raw = response.content if hasattr(response, "content") else str(response)
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
+
+    try:
+        if isinstance(raw, str):
+            mcqs = json.loads(cleaned)
+        elif isinstance(raw, list):
+            mcqs = raw
+        else:
+            raise ValueError("Unexpected response format")
+    except Exception as e:
+        return {
+            "error": "Failed to parse MCQs.",
+            "details": str(e),
+            "raw_response": str(raw)
+        }
+
+    return {"mcqs": mcqs}

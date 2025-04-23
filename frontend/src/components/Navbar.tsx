@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Car as Cards } from 'lucide-react';
+import { FileText, Car as Cards, ListChecks } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
@@ -31,6 +31,17 @@ export default function Navbar() {
             >
               <Cards className="w-5 h-5 mr-2" />
               Flashcards
+            </Link>
+            <Link
+              to="/mcqs"
+              className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                location.pathname === '/mcqs'
+                  ? 'border-indigo-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              <ListChecks className="w-5 h-5 mr-2" />
+              MCQs
             </Link>
           </div>
         </div>
