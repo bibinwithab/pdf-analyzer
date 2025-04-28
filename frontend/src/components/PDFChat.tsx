@@ -8,7 +8,7 @@ export default function PDFChat() {
 
   const { file, setFile, messages, setMessages, loading, setLoading } = useData();
 
-  const URL = 'http://127.0.0.1:8000/'
+  const URL = 'https://pdf-analyzer-backend-lcz2.onrender.com/'
 
   // const generateAudioSummary = async () => {
   //   setLoading(true);
