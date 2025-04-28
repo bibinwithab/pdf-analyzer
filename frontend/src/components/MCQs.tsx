@@ -12,7 +12,7 @@ export default function MCQs() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const URL = 'http://127.0.0.1:8000/';
+  const URL = 'https://pdf-analyzer-backend-lcz2.onrender.com/';
 
   const handleSearch = async () => {
     if (!topic.trim()) return;
