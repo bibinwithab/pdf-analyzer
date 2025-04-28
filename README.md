@@ -6,21 +6,23 @@ A full stack RAG application that helps students learn and extract info from lon
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
 - [Questions](#questions)
 
-## Installation
-cd frontend
-
 ## Usage
-clone repo
-
-## Contributing
-
-
-## License
-This project is licensed under the  License.
+##### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+##### Backend
+```bash
+cd backend
+python setup.py
+<activate the virtual env>
+pip install requirements.txt
+uvicorn main:app --reload
+```
 
 ## Questions
 GitHub: [bibinwithab](https://github.com/bibinwithab)
