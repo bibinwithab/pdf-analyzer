@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
-import { Upload, Send, Loader2, X } from 'lucide-react';
+import { Upload, Send, Loader2, X} from 'lucide-react';
 import { useData } from './DataContext'; 
 
 export default function PDFChat() {
@@ -9,6 +9,22 @@ export default function PDFChat() {
   const { file, setFile, messages, setMessages, loading, setLoading } = useData();
 
   const URL = 'http://127.0.0.1:8000/'
+
+  // const generateAudioSummary = async () => {
+  //   setLoading(true);
+  //   setMessages(prev => [...prev, { type: 'bot', content: 'Generating audio summary...' }]);
+  //   try {
+  //     const response = await axios.post(URL + 'pdf-summary-audio/', {}, { responseType: 'blob' });
+  //     const blob = new Blob([response.data], { type: 'audio/mpeg' });
+  //     const url = URL.createObjectURL(blob);
+  //     setAudioUrl(url);
+  //     setMessages(prev => [...prev, { type: 'bot', content: 'Audio summary generated. Click play below.' }]);
+  //   } catch (error) {
+  //     setMessages(prev => [...prev, { type: 'bot', content: 'Failed to generate audio summary.' }]);
+  //     console.error(error);
+  //   }
+  //   setLoading(false);
+  // };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
