@@ -5,6 +5,7 @@ import { useData } from './DataContext';
 
 export default function PDFChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const { file, setFile, messages, setMessages, loading, setLoading } = useData();
 
@@ -161,6 +162,7 @@ export default function PDFChat() {
         {/* Ask Question Section */}
         <div className="p-4 border-t">
           <input
+          ref={inputRef}
             type="text"
             placeholder="Ask a question about the PDF..."
             className="w-full p-3 border rounded-lg"
@@ -173,7 +175,15 @@ export default function PDFChat() {
           />
           <div className="flex justify-end mt-2">
             <button
-              onClick={() => askQuestion('What is the summary of the PDF?')}
+              onClick={() => {
+                const inputValue = inputRef.current?.value.trim();
+                if (!inputValue) {
+                  askQuestion('What is the summary of the PDF?');
+                } else {
+                  askQuestion(inputValue);
+                  if (inputRef.current) inputRef.current.value = '';
+                }
+              }}
               disabled={loading}
               className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
             >
