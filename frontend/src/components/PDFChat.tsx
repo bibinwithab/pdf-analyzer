@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { Upload, Send, Loader2, X} from 'lucide-react';
 import { useData } from './DataContext'; 
+import ReactMarkdown from 'react-markdown';
 
 export default function PDFChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -9,7 +10,7 @@ export default function PDFChat() {
 
   const { file, setFile, messages, setMessages, loading, setLoading } = useData();
 
-  const URL = 'https://pdf-analyzer-backend-lcz2.onrender.com/'
+  const URL = 'http://localhost:8000/'
 
   // const generateAudioSummary = async () => {
   //   setLoading(true);
@@ -115,29 +116,29 @@ export default function PDFChat() {
 
       {/* Chat Messages */}
       <div className="h-[500px] overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              message.type === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.type === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              {message.content}
-            </div>
-          </div>
-        ))}
-        {loading && (
-          <div className="flex justify-center">
-            <Loader2 className="animate-spin text-indigo-600" />
-          </div>
-        )}
+      {messages.map((message, index) => (
+        <div
+          key={index}
+          className={`flex mb-2 ${
+          message.type === 'user' ? 'justify-end' : 'justify-start'
+          }`}
+        >
+        <div
+          className={`max-w-[70%] rounded-lg p-3 whitespace-pre-wrap ${
+          message.type === 'user'
+            ? 'bg-indigo-600 text-white'
+            : 'bg-gray-100 text-gray-800'
+          }`}
+        >
+      {message.type === 'bot' ? (
+        <ReactMarkdown>{message.content}</ReactMarkdown>
+      ) : (
+        message.content
+      )}
+    </div>
+  </div>
+))}
+
       </div>
 
       {/* Upload Section */}

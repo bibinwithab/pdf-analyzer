@@ -50,9 +50,9 @@ def get_vector_store(text_chunks):
 
 def get_conversational_chain():
     prompt_template = """
-    Answer the question as detailed as possible from the provided context. 
-    If the answer is not in the context, just say "answer is not available in the context". 
-    Do not make up an answer.
+    Answer the question in a clear, structured format using markdown. 
+    Use appropriate headings, bullet points, or numbered lists where possible. 
+    If the answer is not available in the context, say "Answer is not available in the context."
 
     Context:
     {context}
@@ -60,7 +60,7 @@ def get_conversational_chain():
     Question:
     {question}
 
-    Answer:
+    Answer (use markdown formatting):
     """
 
     model = ChatGoogleGenerativeAI(
