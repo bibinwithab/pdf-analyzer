@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Upload, Send, Loader2, X} from 'lucide-react';
 import { useData } from './DataContext'; 
@@ -6,9 +6,15 @@ import ReactMarkdown from 'react-markdown';
 
 export default function PDFChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const messageEndRef = useRef<HTMLDivElement | null>(null);
 
   const { file, setFile, messages, setMessages, loading, setLoading } = useData();
+
+  useEffect(()=>{
+    messageEndRef.current?.scrollIntoView({"behavior":"smooth"});
+  });
 
   const URL = 'http://localhost:8000/'
 
@@ -135,6 +141,7 @@ export default function PDFChat() {
       ) : (
         message.content
       )}
+      <div ref={messageEndRef}/>
     </div>
   </div>
 ))}
