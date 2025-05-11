@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
-import { Upload, Send, Loader2, X} from 'lucide-react';
-import { useData } from './DataContext'; 
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import { Upload, Send, Loader2, X } from "lucide-react";
+import { useData } from "./DataContext";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function PDFChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -11,13 +11,14 @@ export default function PDFChat() {
 
   const messageEndRef = useRef<HTMLDivElement | null>(null);
 
-  const { file, setFile, messages, setMessages, loading, setLoading } = useData();
+  const { file, setFile, messages, setMessages, loading, setLoading } =
+    useData();
 
-  useEffect(()=>{
-    messageEndRef.current?.scrollIntoView({"behavior":"smooth"});
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   });
 
-  const URL = 'http://localhost:8000/'
+  const URL = "http://localhost:8000/";
 
   // const generateAudioSummary = async () => {
   //   setLoading(true);
@@ -37,30 +38,36 @@ export default function PDFChat() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
-    if (selectedFile && selectedFile.type === 'application/pdf') {
+    if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      setMessages([{ type: 'bot', content: 'Processing...' }]);
+      setMessages([{ type: "bot", content: "Processing..." }]);
       handleUpload(selectedFile);
     } else {
-      setMessages([{ type: 'bot', content: 'Please upload a PDF file.' }]);
+      setMessages([{ type: "bot", content: "Please upload a PDF file." }]);
     }
   };
 
   const handleUpload = async (selectedFile: File) => {
     setLoading(true);
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post(URL+'upload-pdf/', formData, {
+      const response = await axios.post(URL + "upload-pdf/", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
-      setMessages(prev => [...prev, { type: 'bot', content: response.data.message }]);
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", content: response.data.message },
+      ]);
     } catch (error) {
-      setMessages(prev => [...prev, { type: 'bot', content: 'Error processing the PDF. Please try again.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", content: "Error processing the PDF. Please try again." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -68,19 +75,22 @@ export default function PDFChat() {
 
   const askQuestion = async (question: string) => {
     setLoading(true);
-    setMessages(prev => [...prev, { type: 'user', content: question }]);
+    setMessages((prev) => [...prev, { type: "user", content: question }]);
     try {
-      const response = await axios.post(URL+'ask-question/', {
+      const response = await axios.post(URL + "ask-question/", {
         question,
       });
 
-      const answer = response.data.answer || 'No answer returned.';
-      setMessages(prev => [...prev, { type: 'bot', content: answer }]);
+      const answer = response.data.answer || "No answer returned.";
+      setMessages((prev) => [...prev, { type: "bot", content: answer }]);
     } catch (error) {
-      setMessages(prev => [...prev, { type: 'bot', content: 'Error getting answer. Please try again.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", content: "Error getting answer. Please try again." },
+      ]);
     }
     setLoading(false);
-  }
+  };
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -89,16 +99,21 @@ export default function PDFChat() {
   const handleRemoveFile = () => {
     setFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
-    setMessages(prev => [...prev, { type: 'bot', content: 'PDF file removed. You can upload a new one.' }]);
+    setMessages((prev) => [
+      ...prev,
+      { type: "bot", content: "PDF file removed. You can upload a new one." },
+    ]);
   };
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mt-8">
       {/* Header */}
       <div className="bg-indigo-600 p-4">
-        <h1 className="text-2xl font-bold text-white text-center">PDF Chat Assistant</h1>
+        <h1 className="text-2xl font-bold text-white text-center">
+          PDF Chat Assistant
+        </h1>
       </div>
 
       {/* Current File Display */}
@@ -123,30 +138,31 @@ export default function PDFChat() {
 
       {/* Chat Messages */}
       <div className="h-[500px] overflow-y-auto p-4 space-y-4">
-      {messages.map((message, index) => (
-        <div
-          key={index}
-          className={`flex mb-2 ${
-          message.type === 'user' ? 'justify-end' : 'justify-start'
-          }`}
-        >
-        <div
-          className={`max-w-[70%] rounded-lg p-3 whitespace-pre-wrap ${
-          message.type === 'user'
-            ? 'bg-indigo-600 text-white'
-            : 'bg-gray-100 text-gray-800'
-          }`}
-        >
-      {message.type === 'bot' ? (
-        <ReactMarkdown remarkPlugins={remarkGfm}>{message.content}</ReactMarkdown>
-      ) : (
-        message.content
-      )}
-      <div ref={messageEndRef}/>
-    </div>
-  </div>
-))}
-
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex mb-2 ${
+              message.type === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`max-w-[70%] rounded-lg p-3 whitespace-pre-wrap ${
+                message.type === "user"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {message.type === "bot" ? (
+                <ReactMarkdown remarkPlugins={remarkGfm}>
+                  {message.content}
+                </ReactMarkdown>
+              ) : (
+                message.content
+              )}
+              <div ref={messageEndRef} />
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Upload Section */}
@@ -164,21 +180,29 @@ export default function PDFChat() {
             disabled={loading}
             className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
           >
-            <Upload size={20} />
-            {file ? 'Upload Another PDF' : 'Upload PDF'}
+            {loading ? (
+              <Loader2 size={20} className="animate-spin"></Loader2>
+            ) : (
+              <Upload size={20}></Upload>
+            )}
+            {loading
+              ? "Processing..."
+              : file
+              ? "Upload Another PDF"
+              : "Upload PDF"}
           </button>
         </div>
         {/* Ask Question Section */}
         <div className="p-4 border-t">
           <input
-          ref={inputRef}
+            ref={inputRef}
             type="text"
             placeholder="Ask a question about the PDF..."
             className="w-full p-3 border rounded-lg"
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
+              if (e.key === "Enter" && (e.target as HTMLInputElement).value) {
                 askQuestion((e.target as HTMLInputElement).value);
-                (e.target as HTMLInputElement).value = '';
+                (e.target as HTMLInputElement).value = "";
               }
             }}
           />
@@ -187,17 +211,21 @@ export default function PDFChat() {
               onClick={() => {
                 const inputValue = inputRef.current?.value.trim();
                 if (!inputValue) {
-                  askQuestion('What is the summary of the PDF?');
+                  askQuestion("What is the summary of the PDF?");
                 } else {
                   askQuestion(inputValue);
-                  if (inputRef.current) inputRef.current.value = '';
+                  if (inputRef.current) inputRef.current.value = "";
                 }
               }}
               disabled={loading}
               className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
             >
-              <Send size={20} />
-              Ask Question / Click for Summaray
+              {loading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <Send size={20} />
+              )}
+              {loading ? "Processing..." : "Ask Question / Click for Summary"}
             </button>
           </div>
         </div>
