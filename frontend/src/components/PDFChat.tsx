@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Upload, Send, Loader2, X} from 'lucide-react';
 import { useData } from './DataContext'; 
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function PDFChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,7 +138,7 @@ export default function PDFChat() {
           }`}
         >
       {message.type === 'bot' ? (
-        <ReactMarkdown>{message.content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={remarkGfm}>{message.content}</ReactMarkdown>
       ) : (
         message.content
       )}
