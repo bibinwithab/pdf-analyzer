@@ -5,7 +5,6 @@ import re
 import json
 from dotenv import load_dotenv
 
-
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -14,10 +13,13 @@ from langchain.prompts import PromptTemplate
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
+from logger import logger
 
 from pydantic import BaseModel
 
 load_dotenv()
+
+logger.info("testing logger")
 
 GOOGLE_GEMINI_KEY = os.getenv("GOOGLE_GEMINI_KEY")
 
@@ -34,6 +36,7 @@ def get_pdf_text(pdf_path):
                 text += page_text
         return text
     else:
+        logger.error(f"PDF file not found: {pdf_path}")
         raise FileNotFoundError(f"No such file: '{pdf_path}'")
 
 def get_text_chunks(text):
@@ -96,7 +99,9 @@ def ask_question(user_question):
         "question": user_question
     })
 
-    print("Raw response from chain:", response)
+    logger.info(f"Question: {user_question}")
+    logger.info(f"Response: {response}")
+
     return response
 
 app = FastAPI()
@@ -112,10 +117,11 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the PDF QA API!"}
+    return {"message": "Welcome to the PDF ANALYZER API!"}
 
 @app.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...)):
+    logger.info("Called /upload-pdf/")
     upload_dir = "./uploads"
     os.makedirs(upload_dir, exist_ok=True)
 
@@ -128,15 +134,18 @@ async def upload_pdf(file: UploadFile = File(...)):
     chunks = get_text_chunks(text)
     get_vector_store(chunks)
 
+    logger.info(f"Processed PDF: {file.filename}")
+
     os.remove(pdf_path)
 
     return {"message": "PDF processed successfully."}
 
 @app.post("/ask-question/")
 def ask_question_route(q: Question):
+    logger.info("Called /ask-question/")
     response = ask_question(q.question)
 
-    print("Full chain response:", response)
+    logger.info(f"Full chain response: {response}")
 
     if isinstance(response, dict) and "answer" in response:
         return {"answer": response["answer"]}
@@ -147,6 +156,7 @@ def ask_question_route(q: Question):
 
 @app.post("/generate-flashcards/")
 def generate_flashcards(topic: Question):
+    logger.info("Called /generate-flashcards/")
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001",
         google_api_key=GOOGLE_GEMINI_KEY
@@ -193,7 +203,7 @@ def generate_flashcards(topic: Question):
     raw = response.content if hasattr(response, "content") else str(response)
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
 
-    print("cleaned flashcard response:", cleaned)
+    logger.info(f"cleaned flashcard response: {cleaned}")
 
     try:
         if isinstance(raw, str):
@@ -213,6 +223,8 @@ def generate_flashcards(topic: Question):
 
 @app.post("/generate-mcqs/")
 def generate_mcqs(topic: Question):
+    logger.info("Called /generate-mcqs/")
+
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001",
         google_api_key=GOOGLE_GEMINI_KEY
@@ -264,6 +276,8 @@ def generate_mcqs(topic: Question):
     response = model.invoke(prompt)
     raw = response.content if hasattr(response, "content") else str(response)
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
+
+    logger.info(f"cleaned MCQ response: {cleaned}")
 
     try:
         if isinstance(raw, str):
