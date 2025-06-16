@@ -18,7 +18,7 @@ export default function PDFChat() {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   });
 
-  const URL = "https://pdf-analyzer-backend-lcz2.onrender.com/";
+  const URL = "https://pdf-analyzer-backend-lcz2.onrender.com/" || "http://localhost:5173/";
 
   // const generateAudioSummary = async () => {
   //   setLoading(true);
