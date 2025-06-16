@@ -128,6 +128,8 @@ async def upload_pdf(file: UploadFile = File(...)):
     chunks = get_text_chunks(text)
     get_vector_store(chunks)
 
+    os.remove(pdf_path)
+
     return {"message": "PDF processed successfully."}
 
 @app.post("/ask-question/")
