@@ -1,6 +1,7 @@
 .qodo
 venv/
 faiss_index/
+faiss_indexes/
 pdf/
 .env
 __pycache__/

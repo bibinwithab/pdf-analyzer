@@ -1,196 +1,121 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import os
 import re
 import json
+import uuid
 from dotenv import load_dotenv
+from PyPDF2 import PdfReader
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import PromptTemplate
-from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import os
+
 from logger import logger
 
-from pydantic import BaseModel
-
 load_dotenv()
-
-logger.info("testing logger")
-
 GOOGLE_GEMINI_KEY = os.getenv("GOOGLE_GEMINI_KEY")
 
-class Question(BaseModel):
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+UPLOAD_DIR = "./uploads"
+INDEX_DIR = "./faiss_indexes"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(INDEX_DIR, exist_ok=True)
+
+class QuestionRequest(BaseModel):
     question: str
+    index_id: str
 
 def get_pdf_text(pdf_path):
-    if os.path.isfile(pdf_path):
-        pdf_reader = PdfReader(pdf_path)
-        text = ""
-        for page in pdf_reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text
-        return text
-    else:
-        logger.error(f"PDF file not found: {pdf_path}")
-        raise FileNotFoundError(f"No such file: '{pdf_path}'")
+    reader = PdfReader(pdf_path)
+    text = ""
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text
+    return text
 
 def get_text_chunks(text):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
-    return text_splitter.split_text(text)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
+    return splitter.split_text(text)
 
-def get_vector_store(text_chunks):
+def save_vector_store(chunks, index_id):
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001",
         google_api_key=GOOGLE_GEMINI_KEY
     )
-    vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
-    vector_store.save_local("faiss_index")
+    vs = FAISS.from_texts(chunks, embedding=embeddings)
+    vs.save_local(os.path.join(INDEX_DIR, index_id))
+
+def load_vector_store(index_id):
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001",
+        google_api_key=GOOGLE_GEMINI_KEY
+    )
+    index_path = os.path.join(INDEX_DIR, index_id)
+    return FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
 
 def get_conversational_chain():
-    prompt_template = """
-    Answer the question in a clear, structured format using markdown. 
-    Use appropriate headings, bullet points, or numbered lists where possible. 
-    If the answer is not available in the context, say "Answer is not available in the context."
-
+    template = """
+    Answer the question in markdown format.
     Context:
     {context}
-
     Question:
     {question}
-
-    Answer (use markdown formatting):
     """
-
-    model = ChatGoogleGenerativeAI(
+    llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         temperature=0.3,
         google_api_key=GOOGLE_GEMINI_KEY
     )
-
-    prompt = PromptTemplate(
-        template=prompt_template,
-        input_variables=["context", "question"]
-    )
-
-    return create_stuff_documents_chain(llm=model, prompt=prompt)
-
-def ask_question(user_question):
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001",
-        google_api_key=GOOGLE_GEMINI_KEY
-    )
-
-    vector_store = FAISS.load_local(
-        "faiss_index",
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-
-    docs = vector_store.similarity_search(user_question)
-    chain = get_conversational_chain()
-
-    response = chain.invoke({
-        "context": docs,
-        "question": user_question
-    })
-
-    logger.info(f"Question: {user_question}")
-    logger.info(f"Response: {response}")
-
-    return response
-
-app = FastAPI()
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins = ["http://localhost:5173", "*"],
-    allow_credentials = True,
-    allow_methods = ["*"],
-    allow_headers = {"*"},
-)
-
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the PDF ANALYZER API!"}
+    prompt = PromptTemplate(template=template, input_variables=["context", "question"])
+    return create_stuff_documents_chain(llm=llm, prompt=prompt)
 
 @app.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...)):
-    logger.info("Called /upload-pdf/")
-    upload_dir = "./uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-
-    pdf_path = os.path.join(upload_dir, file.filename)
+    pdf_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(pdf_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
+        f.write(await file.read())
 
     text = get_pdf_text(pdf_path)
     chunks = get_text_chunks(text)
-    get_vector_store(chunks)
-
-    logger.info(f"Processed PDF: {file.filename}")
+    index_id = str(uuid.uuid4())
+    save_vector_store(chunks, index_id)
 
     os.remove(pdf_path)
-
-    return {"message": "PDF processed successfully."}
+    logger.info(f"Created index: {index_id} for {file.filename}")
+    return {"message": "PDF processed successfully", "index_id": index_id}
 
 @app.post("/ask-question/")
-def ask_question_route(q: Question):
-    logger.info("Called /ask-question/")
-    response = ask_question(q.question)
-
-    logger.info(f"Full chain response: {response}")
-
-    if isinstance(response, dict) and "answer" in response:
-        return {"answer": response["answer"]}
-    elif isinstance(response, str):
-        return {"answer": response}
-    else:
-        return {"answer": "Could not generate answer."}
+def ask_question(req: QuestionRequest):
+    vs = load_vector_store(req.index_id)
+    docs = vs.similarity_search(req.question)
+    chain = get_conversational_chain()
+    result = chain.invoke({"context": docs, "question": req.question})
+    return {"answer": result}
 
 @app.post("/generate-flashcards/")
-def generate_flashcards(topic: Question):
-    logger.info("Called /generate-flashcards/")
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001",
-        google_api_key=GOOGLE_GEMINI_KEY
-    )
-
-    vector_store = FAISS.load_local(
-        "faiss_index",
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-
-    docs = vector_store.similarity_search(topic.question)
-
-    context_text = "\n\n".join([doc.page_content for doc in docs])
+def generate_flashcards(req: QuestionRequest):
+    vs = load_vector_store(req.index_id)
+    docs = vs.similarity_search(req.question)
+    context_text = "\n\n".join([d.page_content for d in docs])
 
     prompt = f"""
-    Based on the following context, generate 7 educational flashcards on the topic: "{topic.question}".
-
+    Based on the context, generate 7 flashcards for topic: "{req.question}".
     Context:
     {context_text}
-
-    Format:
-    Return only a JSON array of flashcards, each with 'question' and 'answer' keys.
-    Return only a raw JSON array. Do NOT wrap it with triple backticks or any markdown.
-    Do not include any markdown, triple quotes, or extra commentary.
-
-    Example:
-    [
-        {{
-            "question": "What is DNS?",
-            "answer": "DNS stands for Domain Name System..."
-        }},
-        ...
-    ]
+    Return JSON array with 'question' and 'answer' keys. No markdown or explanation.
     """
 
     model = ChatGoogleGenerativeAI(
@@ -198,73 +123,28 @@ def generate_flashcards(topic: Question):
         temperature=0.5,
         google_api_key=GOOGLE_GEMINI_KEY
     )
-
-    response = model.invoke(prompt)
-    raw = response.content if hasattr(response, "content") else str(response)
-    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
-
-    logger.info(f"cleaned flashcard response: {cleaned}")
+    raw = model.invoke(prompt).content.strip()
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw)
 
     try:
-        if isinstance(raw, str):
-            flashcards = json.loads(cleaned)
-        elif isinstance(raw, list):
-            flashcards = raw
-        else:
-            raise ValueError("Unexpected response format")
+        flashcards = json.loads(cleaned)
     except Exception as e:
-        return {
-            "error": "Failed to parse flashcards.",
-            "details": str(e),
-            "raw_response": str(raw)
-        }
+        return {"error": str(e), "raw_response": raw}
 
     return {"flashcards": flashcards}
 
 @app.post("/generate-mcqs/")
-def generate_mcqs(topic: Question):
-    logger.info("Called /generate-mcqs/")
-
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001",
-        google_api_key=GOOGLE_GEMINI_KEY
-    )
-
-    vector_store = FAISS.load_local(
-        "faiss_index",
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-
-    docs = vector_store.similarity_search(topic.question)
-
-    context_text = "\n\n".join([doc.page_content for doc in docs])
+def generate_mcqs(req: QuestionRequest):
+    vs = load_vector_store(req.index_id)
+    docs = vs.similarity_search(req.question)
+    context_text = "\n\n".join([d.page_content for d in docs])
 
     prompt = f"""
-    Based on the following context, generate 7 multiple choice questions (MCQs) on the topic: "{topic.question}".
-
-    Each question should have:
-    - One question stem
-    - Four options labeled A, B, C, and D
-    - The correct answer indicated as a letter (A/B/C/D)
-
-    Return only a raw JSON array in the following format:
-
-    [
-        {{
-            "question": "What does DNS stand for?",
-            "options": {{
-                "A": "Dynamic Network Service",
-                "B": "Domain Name System",
-                "C": "Distributed Naming Service",
-                "D": "Data Network Structure"
-            }},
-            "correct_answer": "B"
-        }},
-        ...
-    ]
-
-    Do not add any markdown, quotes, or explanation—just return raw JSON.
+    Based on the context, generate 7 MCQs for topic: "{req.question}".
+    Each should have question, 4 options (A-D), and correct_answer.
+    Return raw JSON array only. No markdown or explanation.
+    Context:
+    {context_text}
     """
 
     model = ChatGoogleGenerativeAI(
@@ -272,25 +152,17 @@ def generate_mcqs(topic: Question):
         temperature=0.5,
         google_api_key=GOOGLE_GEMINI_KEY
     )
-
-    response = model.invoke(prompt)
-    raw = response.content if hasattr(response, "content") else str(response)
-    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
-
-    logger.info(f"cleaned MCQ response: {cleaned}")
+    raw = model.invoke(prompt).content.strip()
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw)
 
     try:
-        if isinstance(raw, str):
-            mcqs = json.loads(cleaned)
-        elif isinstance(raw, list):
-            mcqs = raw
-        else:
-            raise ValueError("Unexpected response format")
+        mcqs = json.loads(cleaned)
     except Exception as e:
-        return {
-            "error": "Failed to parse MCQs.",
-            "details": str(e),
-            "raw_response": str(raw)
-        }
+        return {"error": str(e), "raw_response": raw}
 
     return {"mcqs": mcqs}
+
+@app.get("/list-indexes/")
+def list_indexes():
+    indexes = [name for name in os.listdir(INDEX_DIR) if os.path.isdir(os.path.join(INDEX_DIR, name))]
+    return {"indexes": indexes}
