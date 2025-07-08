@@ -35,7 +35,7 @@ os.makedirs(INDEX_DIR, exist_ok=True)
 
 class QuestionRequest(BaseModel):
     question: str
-    index_id: str
+    # index_id: str
 
 def get_pdf_text(pdf_path):
     reader = PdfReader(pdf_path)
