@@ -7,6 +7,8 @@ A full stack RAG application that helps students learn and extract info from lon
 - [Installation](#installation)
 - [Usage](#usage)
 - [Questions](#questions)
+- [Architecture Diagram](#architecturediagram)
+- [Data Flow Diagram](#dataflowdiagram)
 
 ## Usage
 ##### Frontend
@@ -23,6 +25,13 @@ python setup.py
 pip install requirements.txt
 uvicorn main:app --reload
 ```
+
+## Architecture Diagram
+
+
+## Data Flow Diagram
+![Data Flow Diagram](https://github.com/user-attachments/assets/c1b86b67-0b24-4140-8200-eba296c57ebd)
+
 
 ## Questions
 GitHub: [bibinwithab](https://github.com/bibinwithab)
