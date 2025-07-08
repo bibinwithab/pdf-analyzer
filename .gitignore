@@ -11,3 +11,4 @@ __pycache__/
 *.db
 uploads/
 logs/
+backend/index_mapping.json
