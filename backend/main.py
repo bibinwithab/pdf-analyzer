@@ -14,9 +14,6 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-# Assuming 'logger' is defined in logger.py or you can use a basic print for now
-# from logger import logger
-
 load_dotenv()
 GOOGLE_GEMINI_KEY = os.getenv("GOOGLE_GEMINI_KEY")
 
@@ -31,13 +28,11 @@ app.add_middleware(
 
 UPLOAD_DIR = "./uploads"
 INDEX_DIR = "./faiss_indexes"
-# Define a file to store index_id to filename mapping
 INDEX_MAPPING_FILE = "./index_mapping.json"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(INDEX_DIR, exist_ok=True)
 
-# Basic logger if not already imported
 try:
     from logger import logger
 except ImportError:
@@ -49,7 +44,8 @@ class QuestionRequest(BaseModel):
     question: str
     # index_id: str
 
-# --- Helper functions for index mapping ---
+# --- Helper Functions ---
+
 def load_index_mapping():
     """Loads the index_id to filename mapping from a JSON file."""
     if os.path.exists(INDEX_MAPPING_FILE):
@@ -66,7 +62,8 @@ def save_index_mapping(mapping):
     with open(INDEX_MAPPING_FILE, 'w') as f:
         json.dump(mapping, f, indent=4)
 
-# --- Existing functions (unchanged) ---
+# --- PDF Processing Functions ---
+
 def get_pdf_text(pdf_path):
     reader = PdfReader(pdf_path)
     text = ""
@@ -94,7 +91,6 @@ def load_vector_store(index_id):
         google_api_key=GOOGLE_GEMINI_KEY
     )
     index_path = os.path.join(INDEX_DIR, index_id)
-    # Ensure the directory exists before loading
     if not os.path.exists(index_path):
         raise FileNotFoundError(f"Vector store for index_id '{index_id}' not found at '{index_path}'")
     return FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
@@ -115,7 +111,7 @@ def get_conversational_chain():
     prompt = PromptTemplate(template=template, input_variables=["context", "question"])
     return create_stuff_documents_chain(llm=llm, prompt=prompt)
 
-# --- Modified Endpoints ---
+# --- Endpoints ---
 
 @app.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...)):
@@ -129,7 +125,6 @@ async def upload_pdf(file: UploadFile = File(...)):
         index_id = str(uuid.uuid4())
         save_vector_store(chunks, index_id)
 
-        # Update the index_id to filename mapping
         mapping = load_index_mapping()
         mapping[index_id] = file.filename
         save_index_mapping(mapping)
@@ -141,7 +136,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         return {"message": f"Error processing PDF: {e}", "status": "error"}, 500
     finally:
         if os.path.exists(pdf_path):
-            os.remove(pdf_path) # Clean up the uploaded PDF file
+            os.remove(pdf_path)
 
 
 @app.post("/ask-question/")
@@ -240,20 +235,13 @@ def list_indexes():
     stored_mapping = load_index_mapping()
     available_indexes_on_disk = [name for name in os.listdir(INDEX_DIR) if os.path.isdir(os.path.join(INDEX_DIR, name))]
 
-    # Filter out entries from the mapping file that don't have a corresponding directory
-    # And create the desired format for the frontend
     result_indexes = []
     for index_id, file_name in stored_mapping.items():
         if index_id in available_indexes_on_disk:
             result_indexes.append({"id": index_id, "name": file_name})
         else:
-            # Optionally remove stale entries from mapping if you want to keep it clean
-            # del stored_mapping[index_id]
             logger.warning(f"Index ID {index_id} found in mapping but not on disk. Skipping.")
     
-    # If mapping was cleaned, save it back
-    # save_index_mapping(stored_mapping)
-
     logger.info(f"Listing available indexes: {result_indexes}")
     return {"indexes": result_indexes}
 
@@ -263,9 +251,8 @@ def delete_index(index_id: str):
     index_path = os.path.join(INDEX_DIR, index_id)
     if os.path.exists(index_path):
         import shutil
-        shutil.rmtree(index_path) # Recursively remove the directory
+        shutil.rmtree(index_path)
 
-        # Remove from mapping as well
         mapping = load_index_mapping()
         if index_id in mapping:
             del mapping[index_id]
@@ -274,7 +261,6 @@ def delete_index(index_id: str):
         logger.info(f"Deleted index: {index_id}")
         return {"message": f"Index '{index_id}' and its mapping successfully deleted."}
     else:
-        # Also try to remove from mapping even if directory not found
         mapping = load_index_mapping()
         if index_id in mapping:
             del mapping[index_id]
