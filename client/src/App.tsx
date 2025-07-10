@@ -80,6 +80,7 @@ export default function App() {
     if (!question.trim() || !currentIndex) return;
     setChat((c) => [...c, { type: "user", text: question }]);
     setAsking(true);
+    setQuestion("");
     const res = await fetch(`${API_BASE_URL}/ask-question/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -93,7 +94,6 @@ export default function App() {
         text: data.answer?.content || data.answer || "No answer.",
       },
     ]);
-    setQuestion("");
     setAsking(false);
   };
 
