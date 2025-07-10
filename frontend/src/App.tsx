@@ -6,7 +6,7 @@ import FlashcardsSection from "./components/FlashcardsSection";
 import MCQSection from "./components/MCQSection";
 import "./App.css";
 
-const API_DEV_URL = "http://localhost:8000";
+// const API_DEV_URL = "http://localhost:8000";
 const API_PROD_URL = "https://pdf-analyzer-backend-lcz2.onrender.com";
 
 type IndexItem = { id: string; name: string };
