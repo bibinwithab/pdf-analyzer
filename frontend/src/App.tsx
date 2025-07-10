@@ -6,7 +6,8 @@ import FlashcardsSection from "./components/FlashcardsSection";
 import MCQSection from "./components/MCQSection";
 import "./App.css";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_DEV_URL = "http://localhost:8000";
+const API_PROD_URL = "https://pdf-analyzer-backend-lcz2.onrender.com";
 
 type IndexItem = { id: string; name: string };
 type Flashcard = { question: string; answer: string };
@@ -52,7 +53,7 @@ export default function App() {
   // Fetch indexes
   useEffect(() => {
     setLoadingIndexes(true);
-    fetch(`${API_BASE_URL}/list-indexes/`)
+    fetch(`${API_PROD_URL}/list-indexes/`)
       .then((r) => r.json())
       .then((data) => setIndexes(data.indexes || []))
       .finally(() => setLoadingIndexes(false));
@@ -64,7 +65,7 @@ export default function App() {
     setUploading(true);
     const form = new FormData();
     form.append("file", e.target.files[0]);
-    const res = await fetch(`${API_BASE_URL}/upload-pdf/`, {
+    const res = await fetch(`${API_PROD_URL}/upload-pdf/`, {
       method: "POST",
       body: form,
     });
@@ -85,7 +86,7 @@ export default function App() {
     setChat((c) => [...c, { type: "user", text: question }]);
     setAsking(true);
     setQuestion("");
-    const res = await fetch(`${API_BASE_URL}/ask-question/`, {
+    const res = await fetch(`${API_PROD_URL}/ask-question/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, index_id: currentIndex }),
@@ -108,7 +109,7 @@ export default function App() {
     setFlashcards([]);
     setFlashIndex(0);
     setFlashFlipped(false);
-    const res = await fetch(`${API_BASE_URL}/generate-flashcards/`, {
+    const res = await fetch(`${API_PROD_URL}/generate-flashcards/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: flashTopic, index_id: currentIndex }),
@@ -126,7 +127,7 @@ export default function App() {
     setMcqIndex(0);
     setSelectedOption(null);
     setShowAnswer(false);
-    const res = await fetch(`${API_BASE_URL}/generate-mcqs/`, {
+    const res = await fetch(`${API_PROD_URL}/generate-mcqs/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: mcqTopic, index_id: currentIndex }),
@@ -168,7 +169,7 @@ export default function App() {
   // Delete index
   const handleDeleteIndex = async (id: string) => {
     if (!window.confirm("Delete this PDF?")) return;
-    await fetch(`${API_BASE_URL}/delete-index/${id}`, { method: "DELETE" });
+    await fetch(`${API_PROD_URL}/delete-index/${id}`, { method: "DELETE" });
     setIndexes((prev) => prev.filter((idx) => idx.id !== id));
     if (currentIndex === id) setCurrentIndex(null);
   };

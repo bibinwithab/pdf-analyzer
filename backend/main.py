@@ -42,7 +42,7 @@ except ImportError:
 
 class QuestionRequest(BaseModel):
     question: str
-    # index_id: str
+    index_id: str
 
 # --- Helper Functions ---
 
