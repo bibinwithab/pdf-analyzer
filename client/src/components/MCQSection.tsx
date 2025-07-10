@@ -1,7 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 
 type MCQ = {
   question: string;
@@ -20,6 +20,7 @@ interface MCQSectionProps {
   topic: string;
   setTopic: (t: string) => void;
   generateMCQs: () => void;
+  loading: boolean;
 }
 
 export default function MCQSection({
@@ -33,6 +34,7 @@ export default function MCQSection({
   topic,
   setTopic,
   generateMCQs,
+  loading,
 }: MCQSectionProps) {
   return (
     <div className="bg-[#23272f] rounded-lg shadow p-4 flex flex-col items-center">
@@ -43,13 +45,14 @@ export default function MCQSection({
           placeholder="Topic for MCQs"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
+          disabled={loading}
         />
         <button
           className="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 transition"
           onClick={generateMCQs}
-          disabled={!topic.trim()}
+          disabled={!topic.trim() || loading}
         >
-          Generate
+          {loading ? <RotateCcw className="animate-spin" /> : "Generate"}
         </button>
       </div>
       {mcqs.length > 0 && (
