@@ -1,7 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 
 type Flashcard = { question: string; answer: string };
 
@@ -15,6 +15,7 @@ interface FlashcardsSectionProps {
   topic: string;
   setTopic: (t: string) => void;
   generateFlashcards: () => void;
+  loading: boolean;
 }
 
 export default function FlashcardsSection({
@@ -27,6 +28,7 @@ export default function FlashcardsSection({
   topic,
   setTopic,
   generateFlashcards,
+  loading,
 }: FlashcardsSectionProps) {
   return (
     <div className="bg-[#23272f] rounded-lg shadow p-4 flex flex-col items-center">
@@ -37,13 +39,14 @@ export default function FlashcardsSection({
           placeholder="Topic for flashcards"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
+          disabled={loading}
         />
         <button
           className="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 transition"
           onClick={generateFlashcards}
-          disabled={!topic.trim()}
+          disabled={!topic.trim() || loading}
         >
-          Generate
+          {loading ? <RotateCcw className="animate-spin" /> : "Generate"}
         </button>
       </div>
       {flashcards.length > 0 && (
@@ -55,7 +58,7 @@ export default function FlashcardsSection({
           >
             <div className="flip-card-inner">
               <div className="flip-card-front flex items-center justify-center">
-                <span className="font-medium text-lg text-indigo-300">
+                <span className="font-medium text-lg  text-indigo-100">
                   <ReactMarkdown>
                     {flashcards[flashIndex].question}
                   </ReactMarkdown>

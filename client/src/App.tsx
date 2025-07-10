@@ -46,6 +46,9 @@ export default function App() {
   const [flashTopic, setFlashTopic] = useState("");
   const [mcqTopic, setMCQTopic] = useState("");
 
+  const [flashLoading, setFlashLoading] = useState(false);
+  const [mcqLoading, setMcqLoading] = useState(false);
+
   // Fetch indexes
   useEffect(() => {
     setLoadingIndexes(true);
@@ -101,6 +104,7 @@ export default function App() {
   // Generate flashcards
   const generateFlashcards = async () => {
     if (!flashTopic.trim() || !currentIndex) return;
+    setFlashLoading(true);
     setFlashcards([]);
     setFlashIndex(0);
     setFlashFlipped(false);
@@ -111,11 +115,13 @@ export default function App() {
     });
     const data = await res.json();
     setFlashcards(data.flashcards || []);
+    setFlashLoading(false);
   };
 
   // Generate MCQs
   const generateMCQs = async () => {
     if (!mcqTopic.trim() || !currentIndex) return;
+    setMcqLoading(true);
     setMcqs([]);
     setMcqIndex(0);
     setSelectedOption(null);
@@ -127,6 +133,7 @@ export default function App() {
     });
     const data = await res.json();
     setMcqs(data.mcqs || []);
+    setMcqLoading(false);
   };
 
   // Flashcard navigation
@@ -200,6 +207,7 @@ export default function App() {
                 topic={flashTopic}
                 setTopic={setFlashTopic}
                 generateFlashcards={generateFlashcards}
+                loading={flashLoading}
               />
               <MCQSection
                 mcqs={mcqs}
@@ -212,6 +220,7 @@ export default function App() {
                 topic={mcqTopic}
                 setTopic={setMCQTopic}
                 generateMCQs={generateMCQs}
+                loading={mcqLoading}
               />
             </section>
           </>

@@ -40,8 +40,8 @@ body {
   padding: 1.5rem;
 }
 .flip-card-front {
-  background: #23272f;
-  color: #c7d2fe;
+  background: #444c5b;
+  color: #e3e8ff;
 }
 .flip-card-back {
   background: #052e16;
