@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import Header from "./components/Header";
 import PdfSelector from "./components/PdfSelector";
 import ChatSection from "./components/ChatSection";

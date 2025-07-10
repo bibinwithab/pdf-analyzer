@@ -1,4 +1,3 @@
-import React from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
@@ -53,7 +52,7 @@ export default function FlashcardsSection({
         <div className="flex flex-col items-center w-full">
           <motion.div
             className={`flip-card mb-4 ${flashFlipped ? "flipped" : ""}`}
-            onClick={() => setFlashFlipped((f) => !f)}
+            onClick={() => setFlashFlipped(!flashFlipped)}
             whileTap={{ scale: 0.97, rotate: 1 }}
           >
             <div className="flip-card-inner">

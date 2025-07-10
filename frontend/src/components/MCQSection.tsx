@@ -1,4 +1,3 @@
-import React from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";

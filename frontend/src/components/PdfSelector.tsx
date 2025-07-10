@@ -1,5 +1,4 @@
 import { Trash2, Upload, RotateCcw } from "lucide-react";
-import React from "react";
 
 type IndexItem = { id: string; name: string };
 
@@ -8,7 +7,7 @@ interface PdfSelectorProps {
   currentIndex: string | null;
   setCurrentIndex: (id: string) => void;
   handleDeleteIndex: (id: string) => void;
-  fileInput: React.RefObject<HTMLInputElement>;
+  fileInput: React.RefObject<HTMLInputElement> | any;
   handleUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploading: boolean;
   loadingIndexes: boolean;
