@@ -45,7 +45,7 @@ export default function PdfSelector({
         <div className="flex-1">
           <div className="relative">
             <select
-              className="w-full px-3 py-2 rounded border bg-[#23272f] border-neutral-700 pr-10"
+              className="w-full px-3 py-2 rounded border bg-[#23272f] border-neutral-700 pr-10  text-white focus:outline-none focus:border-indigo-500 "
               value={currentIndex || ""}
               onChange={(e) => setCurrentIndex(e.target.value)}
             >
@@ -58,7 +58,7 @@ export default function PdfSelector({
             </select>
             {currentIndex && (
               <button
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-red-400 hover:text-red-600"
+                className="absolute right-7 top-1/2 -translate-y-1/2 text-red-400 hover:text-red-600"
                 title="Delete PDF"
                 onClick={() => handleDeleteIndex(currentIndex)}
               >
