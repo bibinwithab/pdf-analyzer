@@ -33,7 +33,7 @@ export default function FlashcardsSection({
       <h2 className="font-semibold mb-2">Flashcards</h2>
       <div className="flex gap-2 mb-2 w-full">
         <input
-          className="flex-1 px-3 py-2 rounded border bg-[#181a20] border-neutral-700"
+          className="flex-1 px-3 py-2 rounded border bg-[#181a20] border-neutral-700 focus:outline-none focus:border-indigo-500"
           placeholder="Topic for flashcards"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
