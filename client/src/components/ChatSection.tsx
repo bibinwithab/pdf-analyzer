@@ -26,7 +26,7 @@ export default function ChatSection({
          </div>
         <div className="h-128 overflow-y-auto flex flex-col-reverse space-y-2 space-y-reverse mb-2">
           {chat.length === 0 && (
-            <div className="text-gray-500 text-center pt-16">
+            <div className="text-gray-500 text-center mb-64">
               Ask a question about your PDF!
             </div>
           )}

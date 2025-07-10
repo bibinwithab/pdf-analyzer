@@ -43,7 +43,8 @@ export default function App() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
 
-  const [topic, setTopic] = useState("");
+  const [flashTopic, setFlashTopic] = useState("");
+  const [mcqTopic, setMCQTopic] = useState("");
 
   // Fetch indexes
   useEffect(() => {
@@ -99,14 +100,14 @@ export default function App() {
 
   // Generate flashcards
   const generateFlashcards = async () => {
-    if (!topic.trim() || !currentIndex) return;
+    if (!flashTopic.trim() || !currentIndex) return;
     setFlashcards([]);
     setFlashIndex(0);
     setFlashFlipped(false);
     const res = await fetch(`${API_BASE_URL}/generate-flashcards/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: topic, index_id: currentIndex }),
+      body: JSON.stringify({ question: flashTopic, index_id: currentIndex }),
     });
     const data = await res.json();
     setFlashcards(data.flashcards || []);
@@ -114,7 +115,7 @@ export default function App() {
 
   // Generate MCQs
   const generateMCQs = async () => {
-    if (!topic.trim() || !currentIndex) return;
+    if (!mcqTopic.trim() || !currentIndex) return;
     setMcqs([]);
     setMcqIndex(0);
     setSelectedOption(null);
@@ -122,7 +123,7 @@ export default function App() {
     const res = await fetch(`${API_BASE_URL}/generate-mcqs/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: topic, index_id: currentIndex }),
+      body: JSON.stringify({ question: mcqTopic, index_id: currentIndex }),
     });
     const data = await res.json();
     setMcqs(data.mcqs || []);
@@ -196,8 +197,8 @@ export default function App() {
                 setFlashFlipped={setFlashFlipped}
                 handleFlashPrev={handleFlashPrev}
                 handleFlashNext={handleFlashNext}
-                topic={topic}
-                setTopic={setTopic}
+                topic={flashTopic}
+                setTopic={setFlashTopic}
                 generateFlashcards={generateFlashcards}
               />
               <MCQSection
@@ -208,8 +209,8 @@ export default function App() {
                 handleOptionSelect={handleOptionSelect}
                 handleMcqPrev={handleMcqPrev}
                 handleMcqNext={handleMcqNext}
-                topic={topic}
-                setTopic={setTopic}
+                topic={mcqTopic}
+                setTopic={setMCQTopic}
                 generateMCQs={generateMCQs}
               />
             </section>
